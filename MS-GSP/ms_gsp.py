@@ -8,13 +8,13 @@ def parse_data(filename):
 	#print(lines)
 	sequences = []
 	for line in lines:
-		print(line)
+		# print(line)
 		itemsets= []
 		line = line.strip()
 		line = line.strip('<')
 		line = line.strip()
 		line = line.split('>')
-		print (line[0])
+		# print (line[0])
 
 		line = line[0].split('{')
 		#print(line)
@@ -33,7 +33,7 @@ def parse_data(filename):
 				sequence.append(itemset)
 		sequences.append(sequence)
 	
-	print(sequences)
+	# print(sequences)
 	return sequences
 
 
@@ -43,7 +43,7 @@ def parse_supports(filename):
 	f.close
 
 	dictionary = {}
-	#print(lines)
+	# print(lines)
 	for line in lines:
 		line = line.strip()
 		line = line.split('=')
@@ -59,28 +59,56 @@ def parse_supports(filename):
 			item = element1[0].strip()
 			dictionary[item] = element2
 
-	print(dictionary)
-	print (threshold)
+	# print(dictionary)
+	# print (threshold)
 	return dictionary, threshold
 
-def ms_gsp(s, min_supp, n):
+def ms_gsp(s, min_supp, n, threshold):
 	m = sort()
 	l = init_pass(m, s)
-	lvl2_candidate_gen(l, min_supp, n, val)
+	
+	# for i in range(len(l)):
+		# print l[i], supp(l[i])
+	
+	c =lvl2_candidate_gen(l, min_supp, n, threshold)
+	print c
 
 def sort():
 	pass
 
+def supp(val):
+	count = 0
+	s = parse_data('data.txt')
+	for i in range(len(s)):
+		for j in range(len(s[i])):
+			for k in range(len(s[i][j])):
+				if s[i][j][k] == str(val):
+					count += 1
+					break
+			if count != 0:
+				break
+
+	return (float(count) / len(s))
+
 def init_pass(m, s):
-	pass
+	return [10, 30, 40, 50, 70, 80, 90]
 
 def lvl2_candidate_gen(f, min_supp, n, val):
 	candidate_list = []
 
-	for i in range(len(f):
-		if supp(f[i]) >= min_supp[f[i]] # array index could be different
+	for i in range(len(f)):
+		if str(f[i]) in min_supp.keys():
+			min_supp_i = min_supp[str(f[i])]
+		else:
+			min_supp_i = 0.0
+
+		if supp(f[i]) >= min_supp_i: # array index could be different
 			for j in range(i + 1, len(f)):
-				if supp(f[j]) >= min_supp[str(f[j])] and ((supp(f[j]) - supp(f[i])) <= val):
+				if str(f[j]) in min_supp.keys():
+                        		min_supp_j = min_supp[str(f[j])]
+                		else: 
+                        		min_supp_j = 0.0
+				if supp(f[j]) >= min_supp_i and (abs(supp(f[j]) - supp(f[i])) <= val):
 					candidate_list.append([f[i], f[j]])
 	return candidate_list
 
@@ -88,12 +116,11 @@ def ms_candidate_gen():
 	pass
 
 def main():
-	min_supp = []
-	s = []
-	parse_data('data.txt')
-	parse_supports('supports.txt')
-	n = 0
-	ms_gsp(s, min_supp, n)
+	s = parse_data('data.txt')
+	min_supp, threshold = parse_supports('supports.txt')
+	n = len(s)
+	
+	ms_gsp(s, min_supp, n, threshold)
 
 if __name__ == "__main__":
 	main()
