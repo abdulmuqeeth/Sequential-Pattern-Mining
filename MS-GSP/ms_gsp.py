@@ -35,6 +35,7 @@ def parse_data(filename):
 				sequence.append(itemset)
 		sequences.append(sequence)
 
+
 	print(I)
 	print(sequences)
 	return sequences , I
@@ -81,6 +82,7 @@ def pack_sequence(sequence):
 	return seq
 
 def ms_gsp(s, min_supp, n, threshold):
+
 	m = sort()
 	l = init_pass(m, s)
 	
