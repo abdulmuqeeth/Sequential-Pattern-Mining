@@ -36,8 +36,8 @@ def parse_data(filename):
 		sequences.append(sequence)
 
 
-	print(I)
-	print(sequences)
+	# print(I)
+	# print(sequences)
 	return sequences , I
 
 def parse_supports(filename):
@@ -62,8 +62,8 @@ def parse_supports(filename):
 			item = element1[0].strip()
 			dictionary[item] = float(element2)
 
-	print(dictionary)
-	print (sdc)
+	# print(dictionary)
+	# print (sdc)
 	return dictionary, sdc
 
 def pack_sequence(sequence):
@@ -81,16 +81,23 @@ def pack_sequence(sequence):
 	print(seq)
 	return seq
 
-def ms_gsp(s, min_supp, n, threshold):
+def ms_gsp(S, I, min_supp, sdc):
 
-	m = sort()
-	l = init_pass(m, s)
-	
-	# for i in range(len(l)):
-		# print l[i], supp(l[i])
-	
-	c =lvl2_candidate_gen(l, min_supp, n, threshold)
-	print (c)
+	sorted_items, sorted_minsup = sort(I, min_supp)
+	L, support_count = init_pass(sorted_items, S, sorted_minsup)
+
+	F1 = []
+
+	for element in L:
+		index = sorted_items.index(element)
+		if(support_count[index]/len(S) >= sorted_minsup[index]):
+			F1.append(element)
+
+	print(F1)
+
+	n = len(S)
+	c =lvl2_candidate_gen(L, min_supp, n, sdc)
+	print ("LVL2 candidate gen:  ", c)
 
 def sort(I,MIS):
 	
@@ -127,8 +134,7 @@ def supp(val):
 def init_pass(m, s, sorted_minsup):
 	print('init pass')
 	print(m)
-	#sequences  = s
-	#items = m
+
 	support_count = []
 	for item in m:
 		#print(item)
@@ -165,8 +171,6 @@ def init_pass(m, s, sorted_minsup):
 	print('printing L: ')
 	print(L)
 
-	#print(supp(40))
-
 	return L, support_count
 
 def lvl2_candidate_gen(f, min_supp, n, val):
@@ -193,24 +197,10 @@ def ms_candidate_gen():
 	pass
 
 def main():
-	min_supp = []
-	s = []
-	#ms_gsp(s, min_supp)
 	sequences, I = parse_data('data.txt')
-	mis, sdc = parse_supports('supports.txt')
-	#pack_sequence([[10,40],[50]])
-	sorted_items, sorted_minsup = sort(I, mis)
-	L, support_count = init_pass(sorted_items, sequences, sorted_minsup)
+	min_supp, sdc = parse_supports('supports.txt')
 
-	F1 = []
-
-	for element in L:
-		index = sorted_items.index(element)
-		if(support_count[index]/len(sequences) >= sorted_minsup[index]):
-			F1.append(element)
-
-	print(F1)
-
+	ms_gsp(sequences, I, min_supp, sdc)
 
 if __name__ == "__main__":
 	main()
