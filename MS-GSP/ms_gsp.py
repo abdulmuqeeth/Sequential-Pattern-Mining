@@ -90,7 +90,7 @@ def ms_gsp(s, min_supp, n, threshold):
 		# print l[i], supp(l[i])
 	
 	c =lvl2_candidate_gen(l, min_supp, n, threshold)
-	print c
+	print (c)
 
 def sort(I,MIS):
 	
@@ -112,7 +112,7 @@ def sort(I,MIS):
 
 def supp(val):
 	count = 0
-	s = parse_data('data.txt')
+	s, _ = parse_data('data.txt')
 	for i in range(len(s)):
 		for j in range(len(s[i])):
 			for k in range(len(s[i][j])):
@@ -124,8 +124,50 @@ def supp(val):
 
 	return (float(count) / len(s))
 
-def init_pass(m, s):
-	return [10, 30, 40, 50, 70, 80, 90]
+def init_pass(m, s, sorted_minsup):
+	print('init pass')
+	print(m)
+	#sequences  = s
+	#items = m
+	support_count = []
+	for item in m:
+		#print(item)
+		support = 0
+		for sequence in s:
+			for itemset in sequence:
+				if(item in itemset):
+					support = support + 1
+					break
+			#print(sequence)
+		support_count.append(support) 
+	print(support_count)
+	print(sorted_minsup)
+
+	L = []
+	counter = True
+	check = True
+	for item in m:
+		index = m.index(item)
+		
+		if(counter):
+			if((support_count[index]/len(s)) >= sorted_minsup[index]):
+				L.append(item)
+				mis_i = sorted_minsup[index]
+				counter = False
+				continue
+			else:
+				continue
+		
+		if(support_count[index]/len(s) >= mis_i):
+			L.append(item)
+
+
+	print('printing L: ')
+	print(L)
+
+	#print(supp(40))
+
+	return L, support_count
 
 def lvl2_candidate_gen(f, min_supp, n, val):
 	candidate_list = []
@@ -139,9 +181,10 @@ def lvl2_candidate_gen(f, min_supp, n, val):
 		if supp(f[i]) >= min_supp_i: # array index could be different
 			for j in range(i + 1, len(f)):
 				if str(f[j]) in min_supp.keys():
-                        		min_supp_j = min_supp[str(f[j])]
-                		else: 
-                        		min_supp_j = 0.0
+					min_supp_j = min_supp[str(f[j])]
+				else:
+					min_supp_j = 0.0
+				
 				if supp(f[j]) >= min_supp_i and (abs(supp(f[j]) - supp(f[i])) <= val):
 					candidate_list.append([f[i], f[j]])
 	return candidate_list
@@ -156,7 +199,18 @@ def main():
 	sequences, I = parse_data('data.txt')
 	mis, sdc = parse_supports('supports.txt')
 	#pack_sequence([[10,40],[50]])
-	sort(I, mis)
+	sorted_items, sorted_minsup = sort(I, mis)
+	L, support_count = init_pass(sorted_items, sequences, sorted_minsup)
+
+	F1 = []
+
+	for element in L:
+		index = sorted_items.index(element)
+		if(support_count[index]/len(sequences) >= sorted_minsup[index]):
+			F1.append(element)
+
+	print(F1)
+
 
 if __name__ == "__main__":
 	main()
