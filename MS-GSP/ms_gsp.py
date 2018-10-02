@@ -36,8 +36,8 @@ def parse_data(filename):
 		sequences.append(sequence)
 
 
-	print(I)
-	print(sequences)
+	# print(I)
+	# print(sequences)
 	return sequences , I
 
 def parse_supports(filename):
@@ -62,8 +62,8 @@ def parse_supports(filename):
 			item = element1[0].strip()
 			dictionary[item] = float(element2)
 
-	print(dictionary)
-	print (sdc)
+	# print(dictionary)
+	# print (sdc)
 	return dictionary, sdc
 
 def pack_sequence(sequence):
@@ -81,16 +81,23 @@ def pack_sequence(sequence):
 	print(seq)
 	return seq
 
-def ms_gsp(s, min_supp, n, threshold):
+def ms_gsp(S, I, min_supp, sdc):
 
-	m = sort()
-	l = init_pass(m, s)
-	
-	# for i in range(len(l)):
-		# print l[i], supp(l[i])
-	
-	c =lvl2_candidate_gen(l, min_supp, n, threshold)
-	print (c)
+	sorted_items, sorted_minsup = sort(I, min_supp)
+	L, support_count = init_pass(sorted_items, S, sorted_minsup)
+
+	F1 = []
+
+	for element in L:
+		index = sorted_items.index(element)
+		if(support_count[index]/len(S) >= sorted_minsup[index]):
+			F1.append(element)
+
+	print(F1)
+
+	n = len(S)
+	c =lvl2_candidate_gen(L, min_supp, n, sdc)
+	print ("LVL2 candidate gen:  ", c)
 
 def sort(I,MIS):
 	
@@ -127,8 +134,7 @@ def supp(val):
 def init_pass(m, s, sorted_minsup):
 	print('init pass')
 	print(m)
-	#sequences  = s
-	#items = m
+
 	support_count = []
 	for item in m:
 		#print(item)
@@ -165,8 +171,6 @@ def init_pass(m, s, sorted_minsup):
 	print('printing L: ')
 	print(L)
 
-	#print(supp(40))
-
 	return L, support_count
 
 def lvl2_candidate_gen(f, min_supp, n, val):
@@ -189,28 +193,126 @@ def lvl2_candidate_gen(f, min_supp, n, val):
 					candidate_list.append([f[i], f[j]])
 	return candidate_list
 
-def ms_candidate_gen():
-	pass
+def calc_len(a):
+	l = 0
+	for i in range(len(a)):
+		for j in range(len(a[i])):
+			l += 1
+	return l
+
+def ms_candidate_gen(fk_1, min_supp):
+
+	candidate_set = []
+	for i in range(len(fk_1)):
+		s_1 = fk_1[i]
+		size_s_1 = len(s_1)
+		len_s_1 = calc_len(s_1)
+		s_1_copy = s_1
+
+		for j in range(i, len(fk_1)):
+			s_2 = fk_1[j]
+			s_2_copy = s_2
+			size_s_2 = len(s_2)
+			len_s_2 = calc_len(s_2)
+			flag_s_1 = True
+			flag_s_2 = True
+
+			for k_1 in range(len(s_1)):
+				for k_2 in range(len(s_1[k_1])):
+					if min_supp[str(s_1[0][0])] >= min_supp[str(s_1[k_1][k_2])]:
+						flag_s_1 = False
+
+			for k_1 in range(len(s_2)):
+				for k_2 in range(len(s_2[k_1])):
+					if min_supp[str(s_2[-1][-1])] >= min_supp[str(s_2[k_1][k_2])]:
+						flag_s_2 = False
+
+			if flag_s_1:
+				if len(s_1_copy[0]) >= 2:
+					second_s_1 = s_1_copy[0].pop(1)
+				else:
+					second_s_1 = s_1_copy[1].pop(0)
+
+				last_s_2 = s_2_copy[-1].pop()
+				is_seperate_s_2 = False
+
+				if len(s_1_copy[0]) == 0:
+					s_1_copy.pop(0)
+
+				if len(s_2_copy[-1]) == 0:
+					s_2_copy.pop()
+					is_seperate_s_2 = True
+
+				if (s_1_copy == s_2_copy) and (min_supp[str(last_s_2)] > min_supp[str(s_1[0][0])]):
+					last_s_1 = s_1_copy[-1].pop()
+					if is_seperate_s_2:
+						s_1.append(last_s_2)
+						candidate_set.append(s_1)
+						s_1.pop()
+						if (len_s_1 == 2 and size_s_1 == 2) and (last_s_2 > last_s_1):
+							s_1[-1].append(last_s_2)
+							candidate_set.append(s_1)
+					elif (((len_s_1 == 2 and size_s_1 == 1) and (last_s_2 > last_s_1)) or (len_s_1 > 2)):
+						s_1[-1].append(last_s_2)
+						candidate_set.append(s_1)
+
+			elif flag_s_2:
+				if len(s_1_copy[-1]) >= 2:
+					last_second_s_1 = s_1_copy[-1].pop(-2)
+				else:
+					last_second_s_1 = s_1_copy[-2].pop()
+				first_s_2 = s_2_copy[0].pop(0)
+				is_seperate_s_1 = False
+
+				if len(s_1[0][0]) == 1:
+					is_seperate_s_1 = True
+
+				if len(s_1_copy[-2]) == 0:
+					s_1_copy.pop(-2)
+
+				if len(s_2_copy[0]) == 0:
+					s_2_copy.pop(0)
+
+				#	first s1<last s2
+				if (s_1_copy == s_2_copy) and min_supp[str(s1[0][0])] < min_supp[s_2[-1][-1]]:
+					last_s_1 = s_1_copy[-1].pop()
+					if is_seperate_s_1:
+						s_2 = [[s_1[0][0]]] + s_2
+						candidate_set.append(s_2)
+						s_2.pop(0)
+						if len_s_2 == 2 and size_s_2 == 2 and first_s_1 < first_s_2:
+							s_2[0] = s_1[0][0] + s_2[0]
+							candidate_set.append(s_2)
+					elif (((len_s_2 == 2 and size_s_2 == 1) and (first_s_1 < first_s_2)) or (len_s_2 > 2)):
+						s_2[0] = s_1[0][0] + s_2[0]
+						candidate_set.append(s_2)
+			else:
+				first_s_1 = s_1_copy[0].pop(0)
+				last_s_2 = s_2_copy[-1].pop()
+				is_seperate = True
+
+				if len(s_1_copy[0]) == 0:
+					s_1_copy.pop(0)
+
+				if len(s_2_copy[-1]) == 0:
+					s_2_copy.pop()
+				else:
+					is_seperate = False
+
+				if s_1_copy == s_2_copy:
+					if is_seperate:
+						s_1.append([last_s_2])
+					else:
+						s_1[-1].append(last_s_2)
+					candidate_set.append(s_1)
+
+	return candidate_set
 
 def main():
-	min_supp = []
-	s = []
-	#ms_gsp(s, min_supp)
 	sequences, I = parse_data('data.txt')
-	mis, sdc = parse_supports('supports.txt')
-	#pack_sequence([[10,40],[50]])
-	sorted_items, sorted_minsup = sort(I, mis)
-	L, support_count = init_pass(sorted_items, sequences, sorted_minsup)
+	min_supp, sdc = parse_supports('supports.txt')
 
-	F1 = []
-
-	for element in L:
-		index = sorted_items.index(element)
-		if(support_count[index]/len(sequences) >= sorted_minsup[index]):
-			F1.append(element)
-
-	print(F1)
-
+	ms_gsp(sequences, I, min_supp, sdc)
 
 if __name__ == "__main__":
 	main()
