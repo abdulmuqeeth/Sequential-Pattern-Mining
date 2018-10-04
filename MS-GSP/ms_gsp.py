@@ -86,20 +86,26 @@ def ms_gsp(S, I, min_supp, sdc):
 	sorted_items, sorted_minsup = sort(I, min_supp)
 	L, support_count = init_pass(sorted_items, S, sorted_minsup)
 
-	F1 = []
+	k = 2
+	fk_1 = []
 
 	for element in L:
 		index = sorted_items.index(element)
 		if(support_count[index]/len(S) >= sorted_minsup[index]):
-			F1.append(element)
+			fk_1.append(element)
 
-	print(F1)
+	print(fk_1)
 
 	n = len(S)
-	c =lvl2_candidate_gen(L, min_supp, n, sdc)
-	print ("LVL2 candidate gen:  ", c)
+	while(len(fk_1) != 0):
+		if k == 2:
+			c =lvl2_candidate_gen(L, min_supp, n, sdc)
+			print ("LVL2 candidate gen:  ", c)
+		else
+			c = ms_candidate_gen(fk_1, min_supp)
+		# for i in range(len(S))
 
-def sort(I,MIS):
+def sort(I, MIS):
 	
 	for i in I :
 		if(i not in MIS):
@@ -199,6 +205,40 @@ def calc_len(a):
 		for j in range(len(a[i])):
 			l += 1
 	return l
+
+def gen_sub_sequences(s):
+	l = calc_len(s)
+	sub_seq_set = []
+	for i in range(len(s)):
+		for j in range(len(s[i])):
+			for k in range(len(s[i][j])):
+				# print("i, j, k = ", i , j , k)
+				sub_seq = copy.deepcopy(s[i])
+				print "current work seq", sub_seq[j]
+				sub_seq[j].pop(k)
+				# print("sub_seq=   ", sub_seq)
+				sub_seq_set.append(sub_seq)
+	print(sub_seq_set)
+
+	for i in range(len(sub_seq_set)):
+	        for j in range(len(sub_seq_set[i])):
+			if(len(sub_seq_set[i][j]) == 0):
+				break
+		if len(sub_seq_set[i][j]) == 0:
+			sub_seq_set[i].pop(j)
+
+	print (sub_seq_set)
+	return sub_seq_set
+
+def contains(seq, fk_1):
+	l = 3
+	matched_count = 0
+	for i in range(len(seq)):
+		for k in range(len(fk_1)):
+			print(fk_1[k], seq[i])
+			if fk_1[k] == seq[i]:
+				return True
+	return False
 
 def ms_candidate_gen(fk_1, min_supp):
 
@@ -306,7 +346,18 @@ def ms_candidate_gen(fk_1, min_supp):
 						s_1[-1].append(last_s_2)
 					candidate_set.append(s_1)
 
-	return candidate_set
+		# Prune step
+		sub_sequences = gen_sub_sequeneces(candidate_set)
+
+		non_freq = []
+		for i in range(len(sub_sequences)):
+			if not contains(sub_sequences[i], fk_1):
+				non_freq.append(i)
+
+		for i in range(len(non_freq)):
+			sub_sequences.pop(non_freq[i])
+
+	return sub_sequences
 
 def main():
 	sequences, I = parse_data('data.txt')
